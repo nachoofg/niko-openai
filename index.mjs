@@ -1,4 +1,4 @@
-import { ActivityType, Client, EmbedBuilder } from 'discord.js';
+import { Client, EmbedBuilder } from 'discord.js';
 import { Configuration, OpenAIApi } from 'openai';
 import { config } from 'dotenv'
 
@@ -6,48 +6,55 @@ config()
 
 const configg = new Configuration({
     apiKey: process.env.api
-})
-const api = new OpenAIApi(configg)
-
-const client = new Client({
-    intents: ['DirectMessages', "Guilds", "GuildMembers", "MessageContent", "GuildMessages"],
-    presence: {
-        activities: [{
-            name: "Mention me or write in DM",
-            type: ActivityType.Playing
-        }],
-        status: "idle"
-    }
-}).on('messageCreate', async (msg) => {
-    if (msg.author.bot) return
-    var arr = []
-    console.log('1')
-    if (msg.inGuild()) { // in guild
+}),
+    mapp = new Map().set('i', 0),
+    api = new OpenAIApi(configg),
+    error_responses = ["I think i'm missing a bit.", "An error was ocurred, please excuse me.", "I'm so far along that I'm failing."],
+    think_responses = ["I need to think a little, this is driving me crazy.", "Let me think.", "I'm at 90ºC, let me think a bit."],
+    client = new Client({
+        intents: ["Guilds", "GuildMembers", "MessageContent", "GuildMessages"],
+        presence: {
+            status: "idle"
+        }
+    }).on('messageCreate', async (msg) => {
+        if (msg.author.bot) return
+        var arr = []
+        console.log('1')
         console.log('2')
         if (msg.content.startsWith(`<@${client.user.id}>`)) {
-            console.log('3')
+            if (msg.content.replace(/<@\d+>|<@&\d+>/g, '').length < 1) return msg.reply({ embeds: [new EmbedBuilder().setDescription(`⚠️ Please introduce a question or problem.`).setColor('Red')] })
             msg.channel.sendTyping()
-            const compl = await api.createCompletion({
-                model: "text-davinci-003",
-                prompt: `${msg.content.replace(/<@\d+>|<@&\d+>/g, '')}`,
-                max_tokens: 4090,
-                temperature:0
-            })
-            compl.data.choices.forEach((choice) => {
-                arr.push(choice.text)
-            })
-            process.on('uncaughtException', () => {
-                msg.reply({ content: `🙃 An error was ocurred, please excuse me.` })
-            })
-            return msg.reply({ embeds: [new EmbedBuilder().setDescription(`${arr.join('\n')}`).setColor('Random')] })
+            var message = await msg.reply({ embeds: [new EmbedBuilder().setDescription(`🤔 ${think_responses[Math.floor(Math.random() * think_responses.length)]}`).setColor('Yellow')] })
+            console.log('3')
+            try {
+                const compl = await api.createCompletion({
+                    model: "text-davinci-003",
+                    prompt: `${msg.content.replace(/<@\d+>|<@&\d+>/g, '')}`,
+                    max_tokens: 4000,
+                    temperature: 0.2,
+                })
+                compl.data.choices.forEach((choice) => {
+                    arr.push(`${choice.text}\n`)
+                })
+                process.on('uncaughtException', () => {
+                    return message.edit({ embeds: [new EmbedBuilder().setDescription(`🙃 ${error_responses[Math.floor(Math.random() * error_responses.length)]}`).setColor('Red')] })
+                })
+                mapp.set('i', (mapp.get('i') + 1))
+                return message.edit({ embeds: [new EmbedBuilder().setDescription(`${arr.join('\n')}`).setColor('Green').setFooter({ text: `Request N°${(mapp.get('i') - 1)}` })] })
+            } catch (error) {
+                if (error.response) {
+                    return message.edit({ embeds: [new EmbedBuilder().setDescription(`🙃 ${error_responses[Math.floor(Math.random() * error_responses.length)]} ||${error.response.status}||`).setColor('Red')] })
+                } else {
+                    return message.edit({ embeds: [new EmbedBuilder().setDescription(`🙃 ${error_responses[Math.floor(Math.random() * error_responses.length)]} ||Unknown||`).setColor('Red')] })
+                }
+            }
         }
-    }
-}).on('ready', () => {
-    console.clear()
-    console.log('prendido')
-}).on('error', (err) => {
-    console.log(err)
-})
+    }).on('ready', () => {
+        console.clear()
+        console.log('prendido')
+    }).on('error', (err) => {
+        console.log(err)
+    })
 
 
 
