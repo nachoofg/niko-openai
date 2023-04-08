@@ -1,7 +1,5 @@
 # Niko! - Intelligent Bot by OpenAI
 
-![Niko!](https://example.com/niko-bot.png)
-
 ## What is it?
 
 Niko! is an intelligent bot developed using the powerful natural language technology by OpenAI. Designed to help you quickly and efficiently solve questions and problems, Niko! is a versatile tool that uses its ability to understand and generate natural language text to provide you with accurate and helpful answers.
