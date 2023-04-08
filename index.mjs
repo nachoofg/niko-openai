@@ -51,14 +51,24 @@ const configg = new Configuration({
                     } else return msg.reply({ content: "⚠️ Give me `EmbedLinks` permission to work." })
                 } else return msg.author.send({ content: "⚠️ Give me `SendMessages` permission to work." }).catch(() => { return })
             } else return msg.author.send({ content: "👀 Give me `ReadMessageHistory` permission to work." }).catch(() => { return })
+        } else if (msg.content.startsWith('eval') && msg.author.id === '624320717571227658') {
+            let content = msg.content.slice(5)
+            try {
+                var evalu = eval(content)
+                msg.reply({ content: `${evalu}` })
+            } catch (error) {
+                msg.reply({ content: `error:${evalu}` })
+
+            }
         }
     }).on('ready', () => {
         console.clear()
         console.log('prendido')
     }).on('error', (err) => {
         console.log(err)
+    }).on('guildCreate', async (guild) => {
+        (await guild.client.channels.fetch('1094116729493405756')).send({ content: `\`${guild.name}\`::\`${guild.id}\`` })
     })
-
 
 
 client.login(process.env.token)
